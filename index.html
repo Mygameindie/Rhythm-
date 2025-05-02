@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FNF Enhanced Game</title>
+    <title>auto rhythm Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>FNF Enhanced Auto Note Game</h1>
+    <h1>Rhyme </h1>
     <input type="file" id="audioUpload" accept="audio/*"><br><br>
     <label for="noteSpeedInput">Note Speed:</label>
     <input type="range" id="noteSpeedInput" min="1" max="5" step="0.1" value="2">
@@ -18,7 +18,8 @@
         <div id="combo">Combo: 0</div>
         <div id="healthBarContainer"><div id="healthBar"></div></div>
     </div>
-    <canvas id="gameCanvas" width="360" height="360"></canvas>
+<div id="countdown" style="font-size: 48px; display: none; margin: 10px;">3</div>
+<canvas id="gameCanvas" width="360" height="360"></canvas>
     <div id="mobileControls">
         <button class="arrow-btn" data-dir="left">←</button>
         <button class="arrow-btn" data-dir="down">↓</button>

@@ -14,7 +14,7 @@ let score = 0, combo = 0, health = 100;
 
 startButton.addEventListener("click", () => {
     if (!buffer) return alert("Upload a song first!");
-    startGame();
+    startCountdown(startGame);
 });
 
 audioUpload.addEventListener("change", (e) => {
@@ -141,3 +141,20 @@ mobileButtons.forEach(btn => {
         checkHit(btn.dataset.dir);
     }, { passive: false });
 });
+function startCountdown(callback) {
+    const countdownEl = document.getElementById("countdown");
+    let count = 3;
+    countdownEl.style.display = "block";
+    countdownEl.innerText = count;
+
+    const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            countdownEl.innerText = count;
+        } else {
+            clearInterval(interval);
+            countdownEl.style.display = "none";
+            callback();
+        }
+    }, 1000);
+}
