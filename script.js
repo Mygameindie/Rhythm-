@@ -81,7 +81,7 @@ function gameLoop() {
     drawReceptors(); // Draw static target arrows
 
     notes.forEach(note => {
-        const y = (note.time - elapsed) * 900 * noteSpeed + 400;
+        const y = (note.time - elapsed) * 600 * noteSpeed + 115;
         if (!note.hit && note.time < elapsed - 0.3) {
             handleMiss(note);
         }
@@ -121,12 +121,17 @@ function checkHit(inputLane) {
     const elapsed = audioCtx.currentTime - songStartTime;
     for (let i = 0; i < notes.length; i++) {
         const note = notes[i];
-        if (!note.hit && note.lane === inputLane && Math.abs(note.time - elapsed) < 0.3) {
+        if (
+            !note.hit &&
+            note.lane === inputLane &&
+            Math.abs(note.time - elapsed) < 0.15 // tighter window for precision
+        ) {
             handleHit(note);
             return;
         }
     }
 }
+
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowLeft") checkHit("left");
