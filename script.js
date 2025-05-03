@@ -4,7 +4,7 @@ const audioUpload = document.getElementById("audioUpload");
 const startButton = document.getElementById("startButton");
 const mobileButtons = document.querySelectorAll(".arrow-btn");
 
-let audioCtx, source, analyser, buffer, dataArray, notes = [], songStartTime, audio;
+let audioCtx, source, analyser, buffer, notes = [], songStartTime, audio;
 
 const lanes = ["left", "down", "up", "right"];
 const laneX = { left: 40, down: 110, up: 180, right: 250 };
@@ -31,43 +31,45 @@ audioUpload.addEventListener("change", (e) => {
 function initAudio(arrayBuffer) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     audioCtx.decodeAudioData(arrayBuffer, (decodedData) => {
-        buffer = decodedData;
-        generateNotes(buffer);
+        buffer = decodedData; // decode only
     });
 }
 
-// Rhythm-based note generator
-function generateNotes(buffer) {
+async function generateNotes(buffer) {
     const channelData = buffer.getChannelData(0);
     const sampleRate = buffer.sampleRate;
-    const frameSize = Math.floor(sampleRate * 0.05); // 50ms window
-    const energy = [];
+    const step = Math.floor(sampleRate * 0.05); // 50ms window
+    const flux = [];
 
-    for (let i = 0; i < channelData.length; i += frameSize) {
-        let sum = 0;
-        for (let j = 0; j < frameSize; j++) {
-            const val = channelData[i + j] || 0;
-            sum += val * val;
+    for (let i = 1; i < channelData.length / step - 1; i++) {
+        let sumPrev = 0, sumCurr = 0;
+        for (let j = 0; j < step; j++) {
+            const prev = channelData[(i - 1) * step + j] || 0;
+            const curr = channelData[i * step + j] || 0;
+            sumPrev += prev * prev;
+            sumCurr += curr * curr;
         }
-        energy.push(sum);
+        const diff = Math.max(sumCurr - sumPrev, 0);
+        flux.push(diff);
     }
 
-    let threshold = 0.001;
+    const avg = flux.reduce((a, b) => a + b, 0) / flux.length;
     let lastNoteTime = -Infinity;
 
-    for (let i = 1; i < energy.length - 1; i++) {
-        const isPeak = energy[i] > energy[i - 1] && energy[i] > energy[i + 1] && energy[i] > threshold;
-        const timeInSec = (i * frameSize) / sampleRate;
+    for (let i = 1; i < flux.length - 1; i++) {
+        const isPeak = flux[i] > flux[i - 1] && flux[i] > flux[i + 1] && flux[i] > avg * 0.5;
+        const time = i * 0.09;
 
-        if (isPeak && (timeInSec - lastNoteTime) > 0.3) {
+        if (isPeak && time - lastNoteTime > 0.3) {
             const lane = lanes[Math.floor(Math.random() * lanes.length)];
-            notes.push({ time: timeInSec, lane, hit: false });
-            lastNoteTime = timeInSec;
+            notes.push({ time, lane, hit: false });
+            lastNoteTime = time;
         }
     }
 }
 
-function startGame() {
+async function startGame() {
+    await generateNotes(buffer); // generate notes now
     audio = audioCtx.createBufferSource();
     audio.buffer = buffer;
     audio.connect(audioCtx.destination);
