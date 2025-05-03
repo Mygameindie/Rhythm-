@@ -36,16 +36,33 @@ function initAudio(arrayBuffer) {
     });
 }
 
+// Rhythm-based note generator
 function generateNotes(buffer) {
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256;
     const channelData = buffer.getChannelData(0);
     const sampleRate = buffer.sampleRate;
-    for (let i = 0; i < channelData.length; i += sampleRate / 20) {
-        const vol = Math.abs(channelData[i]);
-        if (vol > 0.2) {
-            const dir = lanes[Math.floor(Math.random() * lanes.length)];
-            notes.push({ time: i / sampleRate, lane: dir, hit: false });
+    const frameSize = Math.floor(sampleRate * 0.05); // 50ms window
+    const energy = [];
+
+    for (let i = 0; i < channelData.length; i += frameSize) {
+        let sum = 0;
+        for (let j = 0; j < frameSize; j++) {
+            const val = channelData[i + j] || 0;
+            sum += val * val;
+        }
+        energy.push(sum);
+    }
+
+    let threshold = 0.001;
+    let lastNoteTime = -Infinity;
+
+    for (let i = 1; i < energy.length - 1; i++) {
+        const isPeak = energy[i] > energy[i - 1] && energy[i] > energy[i + 1] && energy[i] > threshold;
+        const timeInSec = (i * frameSize) / sampleRate;
+
+        if (isPeak && (timeInSec - lastNoteTime) > 0.3) {
+            const lane = lanes[Math.floor(Math.random() * lanes.length)];
+            notes.push({ time: timeInSec, lane, hit: false });
+            lastNoteTime = timeInSec;
         }
     }
 }
@@ -78,10 +95,10 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const elapsed = audioCtx.currentTime - songStartTime;
 
-    drawReceptors(); // Draw static target arrows
+    drawReceptors();
 
     notes.forEach(note => {
-        const y = (note.time - elapsed) * 600 * noteSpeed + 115;
+        const y = (note.time - elapsed) * 900 * noteSpeed + 0.1;
         if (!note.hit && note.time < elapsed - 0.3) {
             handleMiss(note);
         }
@@ -107,7 +124,7 @@ function handleMiss(note) {
     note.hit = true;
     combo = 0;
     health = Math.max(0, health - 10);
-	score -= 100;
+    score -= 100;
     updateHUD();
 }
 
@@ -121,17 +138,12 @@ function checkHit(inputLane) {
     const elapsed = audioCtx.currentTime - songStartTime;
     for (let i = 0; i < notes.length; i++) {
         const note = notes[i];
-        if (
-            !note.hit &&
-            note.lane === inputLane &&
-            Math.abs(note.time - elapsed) < 0.15 // tighter window for precision
-        ) {
+        if (!note.hit && note.lane === inputLane && Math.abs(note.time - elapsed) < 0.3) {
             handleHit(note);
             return;
         }
     }
 }
-
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowLeft") checkHit("left");
@@ -142,10 +154,11 @@ document.addEventListener("keydown", (e) => {
 
 mobileButtons.forEach(btn => {
     btn.addEventListener("touchstart", (e) => {
-        e.preventDefault(); // Stop zoom/double-tap on mobile
+        e.preventDefault();
         checkHit(btn.dataset.dir);
     }, { passive: false });
 });
+
 function startCountdown(callback) {
     const countdownEl = document.getElementById("countdown");
     let count = 3;
