@@ -2,30 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>auto rhythm Game</title>
+    <title>Auto Rhythm Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Rhyme </h1>
-    <input type="file" id="audioUpload" accept="audio/*"><br><br>
+    <h1>Rhythm Game</h1>
+
+    <!-- Updated file input for better mp3/mp4 support -->
+    <input type="file" id="audioUpload" accept=".mp3,.wav,.ogg,.mp4,audio/*,video/mp4"><br><br>
+
     <label for="noteSpeedInput">Note Speed:</label>
     <input type="range" id="noteSpeedInput" min="1" max="5" step="0.1" value="2">
     <span id="noteSpeedDisplay">2x</span><br><br>
+
     <button id="startButton">Start Game</button>
+
     <div id="hud">
         <div id="score">Score: 0</div>
         <div id="combo">Combo: 0</div>
         <div id="healthBarContainer"><div id="healthBar"></div></div>
     </div>
-<div id="countdown" style="font-size: 48px; display: none; margin: 10px;">3</div>
-<canvas id="gameCanvas" width="360" height="500"></canvas>
+
+    <div id="countdown" style="font-size: 48px; display: none; margin: 10px;">3</div>
+
+    <canvas id="gameCanvas" width="360" height="500"></canvas>
+
     <div id="mobileControls">
         <button class="arrow-btn" data-dir="left">←</button>
         <button class="arrow-btn" data-dir="down">↓</button>
         <button class="arrow-btn" data-dir="up">↑</button>
         <button class="arrow-btn" data-dir="right">→</button>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
